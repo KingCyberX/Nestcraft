@@ -50,7 +50,7 @@ export const updateUser = createAsyncThunk(
         { name, email, password, role_id },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
         }
       );

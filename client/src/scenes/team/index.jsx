@@ -161,8 +161,6 @@
 
 // export default Team;
 
-
-
 import React, { useEffect, useState } from "react";
 import { Box, Typography, useTheme, Button, TextField } from "@mui/material";
 import { Header } from "../../components";
@@ -171,6 +169,7 @@ import { fetchUsers } from "../../redux/features/usersSlice";
 import { fetchRoles } from "../../redux/features/rolesSlice";
 import { tokens } from "../../theme";
 import AddUserModal from "./AddUserModal";
+import EditUserModal from "./EditUserModal"; // Import the new EditUserModal component
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTable, useSortBy, usePagination, useFilters } from "react-table";
@@ -182,6 +181,8 @@ const Team = () => {
   const { data: users, loading, error } = useSelector((state) => state.users);
   const { roles } = useSelector((state) => state.roles);
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false); // State for Edit modal
+  const [userToEdit, setUserToEdit] = useState(null); // State to store the user to edit
   const [searchQuery, setSearchQuery] = useState(""); // Search query state
 
   useEffect(() => {
@@ -215,7 +216,7 @@ const Team = () => {
               variant="outlined"
               color="primary"
               startIcon={<EditIcon />}
-              onClick={() => handleEdit(row.original.id)}
+              onClick={() => handleEdit(row.original)} // Pass the full user object
               sx={{ textTransform: "none", padding: "6px 12px" }}
             >
               Edit
@@ -241,7 +242,7 @@ const Team = () => {
       users
         .filter((user) =>
           user.name.toLowerCase().includes(searchQuery.toLowerCase())
-        ) // Filter users based on search query
+        )
         .map((user) => ({
           id: user.id,
           name: user.name,
@@ -271,18 +272,41 @@ const Team = () => {
       data,
       initialState: { pageIndex: 0 },
     },
-    useFilters, // Add useFilters for search functionality
-    useSortBy, // Add useSortBy for sorting functionality
-    usePagination // Add usePagination for pagination functionality
+    useFilters,
+    useSortBy,
+    usePagination
   );
 
-  const handleEdit = (id) => {
-    console.log("Edit user with ID:", id);
+  const handleEdit = (user) => {
+    setUserToEdit(user); // Set the user to edit
+    setShowEditModal(true); // Open the Edit modal
   };
 
-  const handleDelete = (id) => {
-    console.log("Delete user with ID:", id);
-  };
+ const handleDelete = (id) => {
+  const token = localStorage.getItem("authToken");
+
+  fetch(`http://localhost:5000/auth/users/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`, // 🔐 Ensure this line sends token
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("Delete response:", data);
+      if (data.message) {
+        alert("User deleted successfully");
+        // Refresh or remove from UI
+      } else {
+        alert(data.error || "Delete failed");
+      }
+    })
+    .catch((error) => {
+      console.error("Error deleting user:", error);
+    });
+};
+
 
   if (loading) return <Typography>Loading...</Typography>;
   if (error) return <Typography color="error">{error}</Typography>;
@@ -303,7 +327,6 @@ const Team = () => {
       </Button>
 
       <Box mt="20px" mb="20px" display="flex" justifyContent="center">
-        {/* Smaller Search bar */}
         <TextField
           variant="outlined"
           label="Search"
@@ -334,11 +357,10 @@ const Team = () => {
                       padding: "12px",
                       backgroundColor: colors.blueAccent[700],
                       color: "white",
-                      textAlign: "center", // Center headers
+                      textAlign: "center",
                     }}
                   >
                     {column.render("Header")}
-                    {/* Add sorting indicators */}
                     <span>
                       {column.isSorted
                         ? column.isSortedDesc
@@ -359,7 +381,7 @@ const Team = () => {
                   {...row.getRowProps()}
                   style={{
                     cursor: "pointer",
-                    "&:hover": { backgroundColor: colors.primary[500] }, // Hover effect
+                    "&:hover": { backgroundColor: colors.primary[500] },
                   }}
                 >
                   {row.cells.map((cell) => (
@@ -368,7 +390,7 @@ const Team = () => {
                       style={{
                         padding: "12px",
                         borderBottom: "1px solid #ccc",
-                        textAlign: "center", // Center content in cells
+                        textAlign: "center",
                       }}
                     >
                       {cell.render("Cell")}
@@ -381,7 +403,6 @@ const Team = () => {
         </table>
       </Box>
 
-      {/* Pagination controls */}
       <Box
         mt="20px"
         display="flex"
@@ -429,6 +450,14 @@ const Team = () => {
           </select>
         </Box>
       </Box>
+
+      {/* Add the EditUserModal */}
+      <EditUserModal
+        show={showEditModal}
+        handleClose={() => setShowEditModal(false)}
+        userToEdit={userToEdit}
+        roles={roles}
+      />
 
       <AddUserModal
         show={showModal}

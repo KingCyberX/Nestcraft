@@ -161,12 +161,30 @@ JOIN roles r ON ur.role_id = r.id
   }
 });
 
-// Edit user (Admins can edit, but not delete)
+// Middleware to verify JWT token
+const authenticateToken = (req, res, next) => {
+  const token = req.headers["authorization"]?.split(" ")[1]; // Get token from 'Authorization' header
+
+  if (!token) {
+    return res.status(403).json({ error: "Token required" });
+  }
+
+  // Verify the token using JWT_SECRET
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: "Invalid token" });
+    req.user = user; // Attach the decoded user info to the request
+    next(); // Proceed to the next middleware or route handler
+  });
+};
+
+
+// Edit user route (Admins can edit, but not delete)
 router.put(
   "/users/:id",
+  authenticateToken,
   checkPermission("user", "updateAny"),
   async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, role_id } = req.body;
     const { id } = req.params;
 
     try {
@@ -180,19 +198,58 @@ router.put(
         ? await bcrypt.hash(password, 10)
         : user[0].password_hash;
 
-      // Update the user data
-      const [result] = await db.execute(
+      // ✅ Update users table
+      await db.execute(
         "UPDATE users SET name = ?, email = ?, password_hash = ? WHERE id = ?",
         [name, email, hashedPassword, id]
       );
 
-      res.status(200).json({ message: "User updated successfully", result });
+      // ✅ Debug and update role
+      console.log("Updating role for user ID:", id, "to role_id:", role_id);
+
+      if (role_id) {
+        const [existingRole] = await db.execute(
+          "SELECT * FROM user_roles WHERE user_id = ?",
+          [id]
+        );
+if (role_id) {
+  console.log("Received role_id:", role_id);
+  await db.execute(
+    `INSERT INTO user_roles (user_id, role_id)
+     VALUES (?, ?)
+     ON DUPLICATE KEY UPDATE role_id = VALUES(role_id)`,
+    [id, role_id]
+  );
+  console.log("Upsert to user_roles successful");
+}
+
+        console.log("Existing user_roles:", existingRole);
+
+        if (existingRole.length > 0) {
+          const [updateResult] = await db.execute(
+            "UPDATE user_roles SET role_id = ? WHERE user_id = ?",
+            [role_id, id]
+          );
+          console.log("UPDATE result:", updateResult);
+        } else {
+          const [insertResult] = await db.execute(
+            "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)",
+            [id, role_id]
+          );
+          console.log("INSERT result:", insertResult);console.log("Received role_id:", role_id);
+
+        }
+      }
+
+      res.status(200).json({ message: "User updated successfully" });
     } catch (error) {
       console.error("Error updating user:", error);
       res.status(500).json({ error: "Internal Server Error" });
     }
   }
 );
+
+
 
 // Delete user (only Super Admins can delete)
 router.delete(
@@ -209,6 +266,7 @@ router.delete(
       }
 
       await db.execute("DELETE FROM users WHERE id = ?", [id]);
+      await db.execute("DELETE FROM user_roles WHERE user_id = ?", [id]); // Optional: also remove role link
 
       res.status(200).json({ message: "User deleted successfully" });
     } catch (error) {
@@ -217,6 +275,7 @@ router.delete(
     }
   }
 );
+
 
 
 router.get("/roles", async (req, res) => {

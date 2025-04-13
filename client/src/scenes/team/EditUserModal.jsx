@@ -11,14 +11,12 @@ import {
   FormControl,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
-import { updateUser } from "../../redux/features/usersSlice"; // Assuming you have an updateUser action in your slice
 
 const EditUserModal = ({ show, handleClose, userToEdit, roles }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [roleId, setRoleId] = useState("");
-  const dispatch = useDispatch();
 
   useEffect(() => {
     if (userToEdit) {
@@ -36,12 +34,36 @@ const EditUserModal = ({ show, handleClose, userToEdit, roles }) => {
       return;
     }
 
-    // Dispatch the update action
-    dispatch(
-      updateUser({ id: userToEdit.id, name, email, password, role_id: roleId })
-    );
+    // Perform PUT request to update the user
+    fetch(`http://localhost:5000/auth/users/${userToEdit.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("authToken")}`, // Add the token here
+      },
+      body: JSON.stringify({
+        name: name,
+        email: email,
+        password: password,
+        role_id: roleId,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        if (data.message) {
+          alert("User updated successfully");
+          console.log("Sending role_id:", roleId);
 
-    handleClose(); // Close modal after submit
+          handleClose(); // Close the modal after saving
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        console.log("Sending role_id:", roleId);
+
+        alert("Error updating user.");
+      });
   };
 
   return (
@@ -69,7 +91,6 @@ const EditUserModal = ({ show, handleClose, userToEdit, roles }) => {
             onChange={(e) => setName(e.target.value)}
             sx={{ marginBottom: 2 }}
           />
-
           <TextField
             label="Email"
             variant="outlined"
@@ -78,7 +99,6 @@ const EditUserModal = ({ show, handleClose, userToEdit, roles }) => {
             onChange={(e) => setEmail(e.target.value)}
             sx={{ marginBottom: 2 }}
           />
-
           <TextField
             label="Password"
             variant="outlined"
@@ -88,7 +108,6 @@ const EditUserModal = ({ show, handleClose, userToEdit, roles }) => {
             onChange={(e) => setPassword(e.target.value)}
             sx={{ marginBottom: 2 }}
           />
-
           <FormControl fullWidth sx={{ marginBottom: 2 }}>
             <InputLabel>Role</InputLabel>
             <Select
