@@ -1,6 +1,5 @@
 // controllers/roleController.js
 const db = require("../utils/db");
-
 // Create a new role
 const createRole = async (req, res) => {
   const { role_name } = req.body;
@@ -10,10 +9,21 @@ const createRole = async (req, res) => {
   }
 
   try {
+    // Check if the role already exists
+    const [existingRole] = await db.execute('SELECT * FROM roles WHERE role_name = ?', [role_name]);
+
+    if (existingRole.length > 0) {
+      // If the role exists, return an error
+      return res.status(400).json({ error: `Role "${role_name}" already exists` });
+    }
+
+    // Insert the new role into the database if it doesn't exist
     const [result] = await db.execute(
       "INSERT INTO roles (role_name) VALUES (?)",
       [role_name]
     );
+
+    // Respond with the success message and the newly created role ID
     res.status(201).json({ message: "Role created successfully", roleId: result.insertId });
   } catch (error) {
     console.error("Error creating role:", error);

@@ -1,15 +1,16 @@
 const mysql = require('mysql2');
-const config = require('config');
+const config = require('../config/config'); // Import the centralized config
 
-// Access DB configuration
-const dbConfig = config.get('db');
-// Create MySQL connection pool
+// Access DB configuration from the centralized config
+const dbConfig = config.db;
+
+// Create MySQL connection pool using the config object
 const pool = mysql.createPool({
   host: dbConfig.host,
   user: dbConfig.user,
   password: dbConfig.password,
-  database: dbConfig.name,
-  port: dbConfig.port || 3306,
+  database: dbConfig.database,
+  port: dbConfig.port, // Use the configured port or default to 3306
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -25,5 +26,6 @@ pool.on('error', (err) => {
   }
 });
 
+// Use promises for async/await usage
 const db = pool.promise();
 module.exports = db;

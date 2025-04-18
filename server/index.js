@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const db = require("./utils/db");
+const createSuperAdmin = require("./seeders/seeder"); // Import the seeder
 
 dotenv.config();  // Load environment variables
 
@@ -23,9 +24,13 @@ db.query('SELECT 1 + 1 AS solution')
 
 // 🔄 Load API Routes
 console.log('🔄 Loading API routes...');
+app.use("/api/auth", require("./routes/authRoutes"));  
 app.use("/api/role", require("./routes/roleRoutes"));
-app.use("/api/permission", require("./routes/permissionRoutes"));
+app.use("/api/permissions", require("./routes/permissionRoutes"));
 app.use("/api/userRole", require("./routes/userRoleRoutes"));
+app.use("/api/userTier", require("./routes/tierRoutes"));
+
+createSuperAdmin();
 
 // ✅ Health Check Endpoint
 app.get('/api/health', (req, res) => {
@@ -39,7 +44,7 @@ app.use((err, req, res, next) => {
 });
 
 // 🚀 Start Server
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

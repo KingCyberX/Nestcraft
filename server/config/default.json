@@ -1,4 +1,4 @@
-{
+{  "port": 5000,
     "db": {
       "host": "srv659.hstgr.io",
       "user": "u213888646_nestcraft",
@@ -6,8 +6,7 @@
       "name": "u213888646_nestcraft",
       "port": 3306
     },
-    "jwt": {
-      "secret": "secretPin"
-    }
+    "jwtSecret": "your_jwt_secret_key"
+
   }
   

@@ -1,0 +1,83 @@
+-- Create the permissions table
+CREATE TABLE permissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    permission_name VARCHAR(255) NOT NULL
+);
+
+-- Create the many-to-many relationship table between roles and permissions
+CREATE TABLE role_permissions (
+    role_id INT,
+    permission_id INT,
+    FOREIGN KEY (role_id) REFERENCES roles(id),
+    FOREIGN KEY (permission_id) REFERENCES permissions(id),
+    PRIMARY KEY (role_id, permission_id)
+);
+
+CREATE TABLE roles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    role_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (role_id) REFERENCES roles(id)
+);
+
+CREATE TABLE user_roles (
+    user_id INT,
+    role_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (role_id) REFERENCES roles(id),
+    PRIMARY KEY (user_id, role_id)
+);
+ALTER TABLE users ADD COLUMN access_code INT DEFAULT 1001;
+
+
+CREATE TABLE tiers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tier_name VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT
+);
+
+
+-- Many-to-many relationship table between tiers and permissions
+CREATE TABLE tier_permissions (
+    tier_id INT,
+    permission_id INT,
+    FOREIGN KEY (tier_id) REFERENCES tiers(id),
+    FOREIGN KEY (permission_id) REFERENCES permissions(id),
+    PRIMARY KEY (tier_id, permission_id)
+);
+
+
+-- Table for user_tiers to map users to their tiers
+CREATE TABLE user_tiers (
+    user_id INT,
+    tier_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (tier_id) REFERENCES tiers(id),
+    PRIMARY KEY (user_id, tier_id)
+);
+
+
+-- Table for third-party apps (App A, B, C, etc.)
+CREATE TABLE third_party_apps (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    app_name VARCHAR(255) NOT NULL,
+    auth_token VARCHAR(255) NOT NULL,
+    app_url VARCHAR(255) NOT NULL
+);
+
+-- Table to map tiers to apps (Many-to-many relationship between tiers and apps)
+CREATE TABLE tier_apps (
+    tier_id INT,
+    app_id INT,
+    FOREIGN KEY (tier_id) REFERENCES tiers(id),
+    FOREIGN KEY (app_id) REFERENCES third_party_apps(id),
+    PRIMARY KEY (tier_id, app_id)
+);
