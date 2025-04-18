@@ -1,172 +1,10 @@
-// import React, { useEffect, useState } from "react";
-// import { Box, Typography, useTheme, Button } from "@mui/material";
-// import { Header } from "../../components";
-// import { DataGrid } from "@mui/x-data-grid";
-// import { useDispatch, useSelector } from "react-redux";
-// import { fetchUsers } from "../../redux/features/usersSlice";
-// import { fetchRoles } from "../../redux/features/rolesSlice"; // Import fetchRoles action
-// import { tokens } from "../../theme";
-// import AddUserModal from "./AddUserModal"; // Import the AddUserModal component
-// import EditIcon from "@mui/icons-material/Edit"; // Import Edit icon
-// import DeleteIcon from "@mui/icons-material/Delete"; // Import Delete icon
-
-// const Team = () => {
-//   const theme = useTheme();
-//   const colors = tokens(theme.palette.mode);
-//   const dispatch = useDispatch();
-//   const { data: users, loading, error } = useSelector((state) => state.users);
-//   const { roles } = useSelector((state) => state.roles); // Ensure roles are in Redux store
-//   const [showModal, setShowModal] = useState(false);
-
-//   useEffect(() => {
-//     dispatch(fetchUsers()); // Fetch users
-//     dispatch(fetchRoles()); // Fetch roles when the component loads
-//   }, [dispatch]);
-
-//   // Columns for DataGrid
-//   const columns = [
-//     { field: "id", headerName: "ID" },
-//     { field: "name", headerName: "Name", flex: 1 },
-//     { field: "email", headerName: "Email", flex: 1 },
-//     {
-//       field: "role_name", // Display role_name instead of role_id
-//       headerName: "Role", // Rename column header to "Role"
-//       flex: 1,
-//       renderCell: ({ row: { role_name } }) => {
-//         return (
-//           <Box
-//             width="120px"
-//             p={1}
-//             display="flex"
-//             alignItems="center"
-//             justifyContent="center"
-//             gap={1}
-//             bgcolor={colors.greenAccent[600]}
-//             borderRadius={1}
-//           >
-//             <Typography textTransform="capitalize">{role_name}</Typography>
-//           </Box>
-//         );
-//       },
-//     },
-//     {
-//       field: "actions", // New column for action buttons
-//       headerName: "Actions",
-//       width: 150,
-//       renderCell: ({ row }) => {
-//         return (
-//           <Box display="flex" justifyContent="space-around">
-//             <Button
-//               variant="outlined"
-//               color="primary"
-//               startIcon={<EditIcon />}
-//               onClick={() => handleEdit(row.id)}
-//             >
-//               Edit
-//             </Button>
-//             <Button
-//               variant="outlined"
-//               color="error"
-//               startIcon={<DeleteIcon />}
-//               onClick={() => handleDelete(row.id)}
-//             >
-//               Delete
-//             </Button>
-//           </Box>
-//         );
-//       },
-//     },
-//   ];
-
-//   const rows = users.map((user) => ({
-//     id: user.id,
-//     name: user.name,
-//     email: user.email,
-//     role_name: user.role_name || "No Role", // Use role_name instead of role_id
-//   }));
-
-//   const handleEdit = (id) => {
-//     console.log("Edit user with ID:", id);
-//     // You can open a modal or redirect to an edit page for the selected user
-//   };
-
-//   const handleDelete = (id) => {
-//     console.log("Delete user with ID:", id);
-//     // Implement deletion logic here (e.g., dispatch an action to delete the user)
-//   };
-
-//   // Handle loading and error states
-//   if (loading) return <Typography>Loading...</Typography>;
-//   if (error) return <Typography color="error">{error}</Typography>;
-
-//   return (
-//     <Box m="20px">
-//       <Header
-//         title="Authentication & Management"
-//         subtitle="Managing the Team Members"
-//       />
-//       <Button
-//         variant="contained"
-//         style={{ backgroundColor: colors.greenAccent[500] }} // Apply the green color from the theme
-//         onClick={() => setShowModal(true)}
-//       >
-//         Add User
-//       </Button>
-
-//       <Box mt="40px" height="75vh">
-//         <DataGrid
-//           rows={rows}
-//           columns={columns}
-//           pageSize={10}
-//           checkboxSelection
-//           sx={{
-//             "& .MuiDataGrid-root": {
-//               border: "none",
-//             },
-//             "& .MuiDataGrid-cell": {
-//               border: "none",
-//             },
-//             "& .name-column--cell": {
-//               color: colors.greenAccent[300],
-//             },
-//             "& .MuiDataGrid-columnHeaders": {
-//               backgroundColor: colors.blueAccent[700],
-//               borderBottom: "none",
-//             },
-//             "& .MuiDataGrid-virtualScroller": {
-//               backgroundColor: colors.primary[400],
-//             },
-//             "& .MuiDataGrid-footerContainer": {
-//               borderTop: "none",
-//               backgroundColor: colors.blueAccent[700],
-//             },
-//             "& .MuiCheckbox-root": {
-//               color: `${colors.greenAccent[200]} !important`,
-//             },
-//             "& .MuiDataGrid-iconSeparator": {
-//               color: colors.primary[100],
-//             },
-//           }}
-//         />
-//       </Box>
-
-//       <AddUserModal
-//         show={showModal}
-//         handleClose={() => setShowModal(false)}
-//         roles={roles} // Pass roles data to AddUserModal
-//       />
-//     </Box>
-//   );
-// };
-
-// export default Team;
 
 import React, { useEffect, useState } from "react";
 import { Box, Typography, useTheme, Button, TextField } from "@mui/material";
 import { Header } from "../../components";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUsers } from "../../redux/features/usersSlice";
-import { fetchRoles } from "../../redux/features/rolesSlice";
+import { loginUser } from '../../redux/slices/authSlice';
+import { fetchRoles } from "../../redux/slices/rolesSlice";
 import { tokens } from "../../theme";
 import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal"; // Import the new EditUserModal component
@@ -186,7 +24,7 @@ const Team = () => {
   const [searchQuery, setSearchQuery] = useState(""); // Search query state
 
   useEffect(() => {
-    dispatch(fetchUsers());
+    dispatch(loginUser());
     dispatch(fetchRoles());
   }, [dispatch]);
 

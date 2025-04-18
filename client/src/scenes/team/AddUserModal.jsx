@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { useDispatch } from "react-redux";
-import { addUser } from "../../redux/features/usersSlice"; // Import the addUser action
-
+import { registerUser } from '../../redux/slices/authSlice';
 const AddUserModal = ({ show, handleClose, roles }) => {
   const dispatch = useDispatch();
   const [userName, setUserName] = useState("");
@@ -27,7 +26,7 @@ const handleSubmit = (e) => {
 
   // Dispatch the addUser action with the password included
   dispatch(
-    addUser({
+    registerUser({
       name: userName,
       email: userEmail,
       role_id: parseInt(role), // Parse role_id to ensure it's a number
