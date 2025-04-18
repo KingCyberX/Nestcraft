@@ -1,21 +1,66 @@
-// In your index.js (server entry point)
+// server.js
+
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const authRoutes = require("./routes/auth"); // Make sure this is correct
+const db = require("./utils/db");
 
-dotenv.config(); // Load environment variables from .env file
+dotenv.config();  // Load environment variables
 
 const app = express();
-const port = process.env.PORT || 5000;
-
-// Middleware setup
 app.use(cors());
-app.use(express.json()); // Middleware to parse JSON request bodies
+app.use(express.json());
 
-// Register routes
-app.use("/auth", authRoutes); // Ensure the /auth path is correct
+// 🧪 Test DB Connection
+db.query('SELECT 1 + 1 AS solution')
+  .then(([rows]) => {
+    console.log('✅ Connected to MySQL. Test Query Result:', rows[0].solution);
+  })
+  .catch((err) => {
+    console.error('❌ MySQL Connection Failed:', err);
+    process.exit(1);  // Exit the application if MySQL connection fails
+  });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+// 🔄 Load API Routes
+console.log('🔄 Loading API routes...');
+app.use("/api/role", require("./routes/roleRoutes"));
+app.use("/api/permission", require("./routes/permissionRoutes"));
+app.use("/api/userRole", require("./routes/userRoleRoutes"));
+
+// ✅ Health Check Endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Server is running' });
+});
+
+// ❌ Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('Error:', err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// 🚀 Start Server
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
+
+// 🔚 Graceful Shutdown (properly closing MySQL pool)
+process.on('SIGINT', () => {
+  console.log("\nGracefully shutting down...");
+  db.end(() => {
+    console.log("MySQL pool closed.");
+    process.exit(0);  // Exit gracefully after closing the pool
+  });
+});
+
+// Handle uncaught exceptions (optional)
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);  // Exit with failure status code
+});
+
+// Handle unhandled promise rejections (optional)
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);  // Exit with failure status code
 });

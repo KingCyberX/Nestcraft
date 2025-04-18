@@ -1,15 +1,29 @@
-// utils/db.js
-const mysql = require("mysql2/promise");
-require("dotenv").config();
+const mysql = require('mysql2');
+const config = require('config');
 
-const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+// Access DB configuration
+const dbConfig = config.get('db');
+// Create MySQL connection pool
+const pool = mysql.createPool({
+  host: dbConfig.host,
+  user: dbConfig.user,
+  password: dbConfig.password,
+  database: dbConfig.name,
+  port: dbConfig.port || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  connectTimeout: 10000,
+  multipleStatements: true,
 });
 
+// Handle connection errors
+pool.on('error', (err) => {
+  console.error('MySQL Pool Error:', err);
+  if (['PROTOCOL_CONNECTION_LOST', 'ECONNRESET'].includes(err.code)) {
+    console.log('🔁 Reconnecting to MySQL...');
+  }
+});
+
+const db = pool.promise();
 module.exports = db;

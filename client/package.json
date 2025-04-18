@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "vite",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
@@ -33,6 +34,7 @@
     "datatables.net-dt": "^2.2.2",
     "formik": "^2.4.5",
     "jquery": "^3.7.1",
+    "nestcraft": "file:..",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.9",
     "react-data-table-component": "^7.7.0",

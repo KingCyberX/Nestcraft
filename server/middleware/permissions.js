@@ -1,3 +1,4 @@
+// middleware/permissions.js
 const jwt = require("jsonwebtoken");
 const db = require("../utils/db");
 const ac = require("../utils/accessControl");
@@ -37,13 +38,13 @@ const checkPermission = (resource, action) => {
 
       const roleName = roleRows[0].role_name;
 
-      // ✅ Use accesscontrol properly
+      // Check if the role has permission to perform the action on the resource
       const isAllowed = ac.can(roleName)[action](resource).granted;
 
       if (!isAllowed) {
-        return res
-          .status(403)
-          .json({ error: `Permission denied for ${action} on ${resource}` });
+        return res.status(403).json({
+          error: `Permission denied for ${action} on ${resource}`,
+        });
       }
 
       req.user = decoded;

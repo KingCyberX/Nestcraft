@@ -5,7 +5,8 @@
   "scripts": {
     "client": "cd client && npm run start",
     "server": "cd server && node index.js",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install:all": "concurrently \"npm install --prefix client\" \"npm install --prefix server\""
   },
   "devDependencies": {
     "concurrently": "^8.2.0"
@@ -18,9 +19,15 @@
     "datatables.net": "^2.2.2",
     "datatables.net-dt": "^2.2.2",
     "jquery": "^3.7.1",
+    "mysql2": "^3.14.0",
     "react-bootstrap": "^2.10.9",
     "react-redux": "^9.2.0",
     "redux": "^5.0.1",
     "redux-thunk": "^3.1.0"
-  }
+  },
+  "description": "��#\u0000 \u0000N\u0000e\u0000s\u0000t\u0000c\u0000r\u0000a\u0000f\u0000t\u0000\r\u0000 \u0000#\u0000 \u0000N\u0000e\u0000s\u0000t\u0000c\u0000r\u0000a\u0000f\u0000t\u0000\r\u0000 \u0000#\u0000 \u0000N\u0000e\u0000s\u0000t\u0000c\u0000r\u0000a\u0000f\u0000t\u0000\r\u0000 \u0000",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
