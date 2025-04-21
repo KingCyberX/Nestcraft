@@ -24,11 +24,15 @@ import {
   ForgetPassword,
   Logout,
 } from "./scenes";
+import PermissionsPage from "./scenes/permissions";
+import ThirdPartyApps from "./scenes/thirdpartyapps";
 
 // Check if the user is authenticated (token exists in localStorage)
 const isAuthenticated = () => {
-  return localStorage.getItem("authToken"); // Check if the token exists
+  const user = sessionStorage.getItem("authToken"); // Get the stored user data
+  return user ? JSON.parse(user) : null; // Parse the user data if it exists, or return null if not
 };
+
 
 // Protected Route: Only accessible if authenticated
 const ProtectedRoute = ({ element }) => {
@@ -39,7 +43,7 @@ const AppRouter = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const authToken = localStorage.getItem("authToken");
+    const authToken = sessionStorage.getItem("authToken");
     setLoading(false);
   }, []);
 
@@ -73,6 +77,9 @@ const AppRouter = () => {
             element={<ProtectedRoute element={<Dashboard />} />}
           />
           <Route path="/team" element={<ProtectedRoute element={<Team />} />} />
+           <Route path="/Permissions" element={<ProtectedRoute element={<PermissionsPage />} />} />
+           <Route path="/thirdpartyapps" element={<ProtectedRoute element={<ThirdPartyApps />} />} />
+
           <Route
             path="/contacts"
             element={<ProtectedRoute element={<Contacts />} />}

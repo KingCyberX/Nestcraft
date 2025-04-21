@@ -1,60 +1,45 @@
-
 import React, { useEffect, useState } from "react";
-import { Box, Typography, useTheme, Button, TextField } from "@mui/material";
-import { Header } from "../../components";
+import { Box, Button, Typography, useTheme } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser } from '../../redux/slices/authSlice';
 import { fetchRoles } from "../../redux/slices/rolesSlice";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid"; // Import DataGrid
 import { tokens } from "../../theme";
-import AddUserModal from "./AddUserModal";
-import EditUserModal from "./EditUserModal"; // Import the new EditUserModal component
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { useTable, useSortBy, usePagination, useFilters } from "react-table";
+import RoleCreate from "./RoleCreate";
+import RoleUpdate from "./RoleUpdate"; // Modal for editing roles
 
-const Team = () => {
+const RoleManagementPage = () => {
+  const dispatch = useDispatch();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const dispatch = useDispatch();
-  const { data: users, loading, error } = useSelector((state) => state.users);
-  const { roles } = useSelector((state) => state.roles);
-  const [showModal, setShowModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false); // State for Edit modal
-  const [userToEdit, setUserToEdit] = useState(null); // State to store the user to edit
-  const [searchQuery, setSearchQuery] = useState(""); // Search query state
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
 
   useEffect(() => {
-    dispatch(loginUser());
-    dispatch(fetchRoles());
+    dispatch(fetchRoles()); // Fetch roles from API or Redux
   }, [dispatch]);
+  const { roles, loading, error } =  useSelector((state) => state.roles); // Get roles from Redux store
+  const handleEdit = (role) => {
+    setSelectedRole(role);
+  };
 
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: "ID",
-        accessor: "id",
-      },
-      {
-        Header: "Name",
-        accessor: "name",
-      },
-      {
-        Header: "Email",
-        accessor: "email",
-      },
-      {
-        Header: "Role",
-        accessor: "role_name",
-      },
-      {
-        Header: "Actions",
-        Cell: ({ row }) => (
+  const handleCreate = () => {
+    setShowCreateForm(true);
+  };
+
+  // Define columns for DataGrid
+  const columns = [
+    { field: "id", headerName: "ID", flex: 0.5 },
+    { field: "role_name", headerName: "Role Name", flex: 1 },
+    {
+      field: "actions",
+      headerName: "Actions",
+      renderCell: (params) => {
+        return (
           <Box display="flex" justifyContent="space-around" gap="10px">
             <Button
               variant="outlined"
               color="primary"
-              startIcon={<EditIcon />}
-              onClick={() => handleEdit(row.original)} // Pass the full user object
+              onClick={() => handleEdit(params.row)} // Pass the selected role to edit
               sx={{ textTransform: "none", padding: "6px 12px" }}
             >
               Edit
@@ -62,248 +47,73 @@ const Team = () => {
             <Button
               variant="outlined"
               color="error"
-              startIcon={<DeleteIcon />}
-              onClick={() => handleDelete(row.original.id)}
+              onClick={() => handleDelete(params.row.id)} // Implement role delete logic
               sx={{ textTransform: "none", padding: "6px 12px" }}
             >
               Delete
             </Button>
           </Box>
-        ),
+        );
       },
-    ],
-    []
-  );
-
-  const data = React.useMemo(
-    () =>
-      users
-        .filter((user) =>
-          user.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        .map((user) => ({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role_name: user.role_name || "No Role",
-        })),
-    [users, searchQuery]
-  );
-
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-    state: { pageIndex, pageSize },
-    canPreviousPage,
-    canNextPage,
-    pageOptions,
-    gotoPage,
-    nextPage,
-    previousPage,
-    setPageSize,
-  } = useTable(
-    {
-      columns,
-      data,
-      initialState: { pageIndex: 0 },
+      flex: 1,
     },
-    useFilters,
-    useSortBy,
-    usePagination
-  );
+  ];
 
-  const handleEdit = (user) => {
-    setUserToEdit(user); // Set the user to edit
-    setShowEditModal(true); // Open the Edit modal
+  const handleDelete = (id) => {
+    // Implement role deletion logic here
+    console.log(`Delete role with ID: ${id}`);
   };
-
- const handleDelete = (id) => {
-  const token = localStorage.getItem("authToken");
-
-  fetch(`http://localhost:5000/auth/users/${id}`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`, // 🔐 Ensure this line sends token
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("Delete response:", data);
-      if (data.message) {
-        alert("User deleted successfully");
-        // Refresh or remove from UI
-      } else {
-        alert(data.error || "Delete failed");
-      }
-    })
-    .catch((error) => {
-      console.error("Error deleting user:", error);
-    });
-};
-
 
   if (loading) return <Typography>Loading...</Typography>;
   if (error) return <Typography color="error">{error}</Typography>;
 
   return (
     <Box m="20px">
-      <Header
-        title="Authentication & Management"
-        subtitle="Managing the Team Members"
-      />
+      <Typography variant="h4" gutterBottom>
+        Role Management
+      </Typography>
+
       <Button
         variant="contained"
-        style={{ backgroundColor: colors.greenAccent[500] }}
-        onClick={() => setShowModal(true)}
-        sx={{ marginBottom: "20px" }}
+        onClick={handleCreate}
+        sx={{ marginBottom: "20px", backgroundColor: colors.greenAccent[500] }}
       >
-        Add User
+        Create Role
       </Button>
 
-      <Box mt="20px" mb="20px" display="flex" justifyContent="center">
-        <TextField
-          variant="outlined"
-          label="Search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          fullWidth
-          sx={{ width: "250px", marginBottom: "20px" }}
+      {showCreateForm && <RoleCreate />}
+
+      <Box mt="20px" height="75vh" sx={{ maxWidth: "100%", overflow: "auto" }}>
+        <DataGrid
+          rows={roles || []} // Ensure the roles data is passed correctly (if roles is empty or undefined, pass an empty array)
+          columns={columns}
+          components={{ Toolbar: GridToolbar }}
+          pageSize={10}
+          rowsPerPageOptions={[5, 10, 25]}
+          checkboxSelection
+          sx={{
+            "& .MuiDataGrid-root": {
+              border: "none",
+            },
+            "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: colors.blueAccent[700],
+            },
+            "& .MuiDataGrid-footerContainer": {
+              backgroundColor: colors.blueAccent[700],
+            },
+            "& .MuiCheckbox-root": {
+              color: `${colors.greenAccent[200]} !important`,
+            },
+            "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
+              color: `${colors.gray[100]} !important`,
+            },
+          }}
         />
       </Box>
 
-      <Box mt="40px" sx={{ overflowX: "auto" }}>
-        <table
-          {...getTableProps()}
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            backgroundColor: colors.primary[400],
-          }}
-        >
-          <thead>
-            {headerGroups.map((headerGroup) => (
-              <tr {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map((column) => (
-                  <th
-                    {...column.getHeaderProps(column.getSortByToggleProps())}
-                    style={{
-                      borderBottom: "2px solid #000",
-                      padding: "12px",
-                      backgroundColor: colors.blueAccent[700],
-                      color: "white",
-                      textAlign: "center",
-                    }}
-                  >
-                    {column.render("Header")}
-                    <span>
-                      {column.isSorted
-                        ? column.isSortedDesc
-                          ? " 🔽"
-                          : " 🔼"
-                        : ""}
-                    </span>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody {...getTableBodyProps()}>
-            {rows.map((row) => {
-              prepareRow(row);
-              return (
-                <tr
-                  {...row.getRowProps()}
-                  style={{
-                    cursor: "pointer",
-                    "&:hover": { backgroundColor: colors.primary[500] },
-                  }}
-                >
-                  {row.cells.map((cell) => (
-                    <td
-                      {...cell.getCellProps()}
-                      style={{
-                        padding: "12px",
-                        borderBottom: "1px solid #ccc",
-                        textAlign: "center",
-                      }}
-                    >
-                      {cell.render("Cell")}
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </Box>
-
-      <Box
-        mt="20px"
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        sx={{
-          flexWrap: "wrap",
-          gap: "10px",
-          justifyContent: "space-between",
-          marginTop: "20px",
-        }}
-      >
-        <Box>
-          <Button onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
-            {"<<"}
-          </Button>
-          <Button onClick={() => previousPage()} disabled={!canPreviousPage}>
-            Previous
-          </Button>
-          <Button onClick={() => nextPage()} disabled={!canNextPage}>
-            Next
-          </Button>
-          <Button
-            onClick={() => gotoPage(pageCount - 1)}
-            disabled={!canNextPage}
-          >
-            {">>"}
-          </Button>
-        </Box>
-
-        <Box display="flex" alignItems="center">
-          <Typography variant="body2" sx={{ marginRight: "10px" }}>
-            Page {pageIndex + 1} of {pageOptions.length}
-          </Typography>
-          <select
-            value={pageSize}
-            onChange={(e) => setPageSize(Number(e.target.value))}
-            style={{ padding: "6px 12px", borderRadius: "4px" }}
-          >
-            {[10, 20, 30, 40].map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                Show {pageSize}
-              </option>
-            ))}
-          </select>
-        </Box>
-      </Box>
-
-      {/* Add the EditUserModal */}
-      <EditUserModal
-        show={showEditModal}
-        handleClose={() => setShowEditModal(false)}
-        userToEdit={userToEdit}
-        roles={roles}
-      />
-
-      <AddUserModal
-        show={showModal}
-        handleClose={() => setShowModal(false)}
-        roles={roles}
-      />
+      {selectedRole && <RoleUpdate roleToEdit={selectedRole} />}
     </Box>
   );
 };
 
-export default Team;
+export default RoleManagementPage;

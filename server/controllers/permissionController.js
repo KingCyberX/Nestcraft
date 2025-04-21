@@ -119,14 +119,21 @@ const assignPermissionToRole = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 // Get all permissions assigned to a role
 const getPermissionsForRole = async (req, res) => {
   const { role_id } = req.params;
 
   try {
     const [permissions] = await db.execute(
-      "SELECT p.permission_name FROM permissions p JOIN role_permissions rp ON p.id = rp.permission_id WHERE rp.role_id = ?",
+      `
+      SELECT p.id, p.permission_name, 
+        CASE 
+          WHEN rp.role_id IS NOT NULL THEN TRUE
+          ELSE FALSE
+        END AS is_assigned
+      FROM permissions p
+      LEFT JOIN role_permissions rp ON p.id = rp.permission_id AND rp.role_id = ?
+      `,
       [role_id]
     );
 

@@ -132,8 +132,14 @@ const SideBar = () => {
           }}
         >
           <Item
-            title="Authentication"
+            title="Role Management"
             path="/team"
+            colors={colors}
+            icon={<PeopleAltOutlined />}
+          />
+           <Item
+            title="Permissions Management"
+            path="/permissions"
             colors={colors}
             icon={<PeopleAltOutlined />}
           />
@@ -170,6 +176,13 @@ const SideBar = () => {
             },
           }}
         >
+          <Item
+            title="APPS"
+            path="/thirdpartyapps"
+            colors={colors}
+            icon={<PersonOutlined />}
+          />
+
           <Item
             title="Event Management"
             path="/"

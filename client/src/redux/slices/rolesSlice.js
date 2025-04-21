@@ -1,18 +1,15 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+// src/redux/slices/rolesSlice.js
 
-const API_URL = "http://localhost:5000/api";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { apiCore } from '../../utils/APICore.js';
 
 // Fetch roles
 export const fetchRoles = createAsyncThunk(
-  'roles/fetchRoles',
+  'role/getroles',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/roles`);
-      const data = await response.json();
-      if (!response.ok) {
-        return rejectWithValue(data.error);
-      }
-      return data;
+      const response = await apiCore.get("role/getroles");
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -22,21 +19,44 @@ export const fetchRoles = createAsyncThunk(
 // Create role
 export const createRole = createAsyncThunk(
   'roles/createRole',
-  async (roleData, { rejectWithValue }) => {
+  async ({ roleData, authToken }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/roles`, {
-        method: 'POST',
+      const response = await apiCore.post("/roles", { role: roleData }, {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${roleData.authToken}`,
+          'Authorization': `Bearer ${authToken}`,
         },
-        body: JSON.stringify(roleData.role),
       });
-      const data = await response.json();
-      if (!response.ok) {
-        return rejectWithValue(data.error);
-      }
-      return data;
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Update role
+export const updateRole = createAsyncThunk(
+  'roles/updateRole',
+  async ({ id, roleData, authToken }, { rejectWithValue }) => {
+    try {
+      const response = await apiCore.update(`/roles/${id}`, { role: roleData }, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Delete role
+export const deleteRole = createAsyncThunk(
+  'roles/deleteRole',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await apiCore.delete(`/roles/${id}`);
+      return { id };
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -47,13 +67,14 @@ export const createRole = createAsyncThunk(
 const rolesSlice = createSlice({
   name: 'roles',
   initialState: {
-    roles: [],
+    roles: {},
     loading: false,
     error: null,
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // Fetch roles
       .addCase(fetchRoles.pending, (state) => {
         state.loading = true;
       })
@@ -65,6 +86,7 @@ const rolesSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      // Create role
       .addCase(createRole.pending, (state) => {
         state.loading = true;
       })
@@ -73,6 +95,33 @@ const rolesSlice = createSlice({
         state.roles.push(action.payload);
       })
       .addCase(createRole.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Update role
+      .addCase(updateRole.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateRole.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.roles.findIndex((role) => role.id === action.payload.id);
+        if (index !== -1) {
+          state.roles[index] = action.payload;
+        }
+      })
+      .addCase(updateRole.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Delete role
+      .addCase(deleteRole.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(deleteRole.fulfilled, (state, action) => {
+        state.loading = false;
+        state.roles = state.roles.filter((role) => role.id !== action.payload.id);
+      })
+      .addCase(deleteRole.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

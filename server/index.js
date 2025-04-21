@@ -29,6 +29,7 @@ app.use("/api/role", require("./routes/roleRoutes"));
 app.use("/api/permissions", require("./routes/permissionRoutes"));
 app.use("/api/userRole", require("./routes/userRoleRoutes"));
 app.use("/api/userTier", require("./routes/tierRoutes"));
+app.use("/api/userApps", require("./routes/thirdPartyAppRoutes"));
 
 createSuperAdmin();
 

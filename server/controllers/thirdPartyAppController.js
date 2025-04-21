@@ -145,21 +145,81 @@ const removeAppFromTier = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
-// Get all apps assigned to a specific tier
-const getAppsForTier = async (req, res) => {
-  const { tier_id } = req.params;
+// Get all apps assigned to a specific user
+const getAppsForUser = async (req, res) => {
+  const { user_id } = req.params;
 
   try {
+    // Step 1: Get the tier_id for the user
+    const [userTier] = await db.execute(
+      "SELECT tier_id FROM users WHERE id = ?",
+      [user_id]
+    );
+
+    // Check if the user exists and has an assigned tier
+    if (userTier.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const tier_id = userTier[0].tier_id;
+
+    // Step 2: Get all apps assigned to the tier
     const [apps] = await db.execute(
-      "SELECT a.app_name, a.auth_token, a.app_url FROM third_party_apps a JOIN tier_apps ta ON a.id = ta.app_id WHERE ta.tier_id = ?",
+      "SELECT a.id,a.app_name, a.auth_token,a.description,a.image_url, a.app_url,a.added FROM third_party_apps a JOIN tier_apps ta ON a.id = ta.app_id WHERE ta.tier_id = ?",
       [tier_id]
     );
 
+    if (apps.length === 0) {
+      return res.status(404).json({ error: "No apps found for this tier" });
+    }
+
     res.status(200).json(apps);
   } catch (error) {
-    console.error("Error fetching apps for tier:", error);
+    console.error("Error fetching apps for user:", error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+const rmAppsIs_AddedFromUserApps = async (req, res) => {
+  const { user_id, row_id, actionType } = req.params;  // actionType should be 'add' or 'remove'
+
+  try {
+    // Step 1: Validate actionType
+    if (actionType !== 'add' && actionType !== 'remove') {
+      return res.status(400).json({ error: 'Invalid action type. Use "add" or "remove".' });
+    }
+
+    // Step 2: Prepare the query based on actionType
+    let query;
+    let queryParams;
+
+    if (actionType === 'add') {
+      // Action to add the app for the user
+      query = 'UPDATE third_party_apps SET added = 1 WHERE id = ? AND user_id = ?';
+      queryParams = [row_id, user_id];
+    } else if (actionType === 'remove') {
+      // Action to remove the app from the user's list
+      query = 'UPDATE third_party_apps SET added = 0 WHERE id = ? AND user_id = ?';
+      queryParams = [row_id, user_id];
+    }
+
+    // Step 3: Execute the query
+    const [result] = await db.execute(query, queryParams);
+
+    // Step 4: Check if any rows were affected (i.e., the app was updated)
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'App not found for the specified user.' });
+    }
+
+    // Step 5: Fetch the updated list of apps (if needed, or return a success message)
+    const [apps] = await db.execute(
+      'SELECT * FROM third_party_apps WHERE user_id = ?',
+      [user_id]
+    );
+
+    res.status(200).json({ message: 'App updated successfully.', apps });
+  } catch (error) {
+    console.error('Error updating app:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
@@ -169,5 +229,6 @@ module.exports = {
   deleteThirdPartyApp,
   assignAppToTier,
   removeAppFromTier,
-  getAppsForTier
+  getAppsForUser,
+  rmAppsIs_AddedFromUserApps
 };

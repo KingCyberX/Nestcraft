@@ -27,7 +27,6 @@ export const createApp = createAsyncThunk(
   }
 );
 
-// Update an existing third-party app
 export const updateApp = createAsyncThunk(
   'thirdPartyApps/updateApp',
   async (appData, { rejectWithValue }) => {

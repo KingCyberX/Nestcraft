@@ -81,3 +81,15 @@ CREATE TABLE tier_apps (
     FOREIGN KEY (app_id) REFERENCES third_party_apps(id),
     PRIMARY KEY (tier_id, app_id)
 );
+
+
+ALTER TABLE users
+ADD COLUMN tier_id INT;
+
+ALTER TABLE third_party_apps
+ADD COLUMN description TEXT,
+ADD COLUMN image_url VARCHAR(255);
+
+ALTER TABLE third_party_apps
+ADD Added BIT DEFAULT 0;
+

@@ -19,9 +19,12 @@
     "datatables.net": "^2.2.2",
     "datatables.net-dt": "^2.2.2",
     "jquery": "^3.7.1",
+    "jwt-decode": "^4.0.0",
     "mysql2": "^3.14.0",
     "react-bootstrap": "^2.10.9",
+    "react-hot-toast": "^2.5.2",
     "react-redux": "^9.2.0",
+    "reactstrap": "^9.2.3",
     "redux": "^5.0.1",
     "redux-thunk": "^3.1.0"
   },

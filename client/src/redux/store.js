@@ -5,8 +5,10 @@ import productsReducer from './slices/productsSlice';
 import authReducer from './slices/authSlice';
 import permissionsReducer from './slices/permissionsSlice';
 import rolesReducer from './slices/rolesSlice';
+import {userAppsReducer} from './slices/userAppsSlice';
 export const store = configureStore({
   reducer: {
+    userApps: userAppsReducer,
     thirdPartyApps: thirdPartyAppsReducer,
     userTier: userTierReducer,
     products: productsReducer,

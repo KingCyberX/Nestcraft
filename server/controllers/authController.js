@@ -113,13 +113,14 @@ const login = async (req, res) => {
     // Send the user data and token as response
     res.status(200).json({
       message: "Login successful",
-      token: token,
+      
       user: {
         id: foundUser.id,
         name: foundUser.name,
         email: foundUser.email,
         role: role[0].role_name,
         permissions: permissions.map(p => p.permission_name),
+        token: token,
       }
     });
   } catch (error) {

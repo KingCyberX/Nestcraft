@@ -1,23 +1,23 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+// src/redux/slices/authSlice.js
 
-// API URL
-const API_URL = "http://localhost:5000/api";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { apiCore } from '../../utils/APICore';
+
+// Load initial auth data from sessionStorage
+const storedAuth = sessionStorage.getItem('authToken');
+const initialAuth = storedAuth ? JSON.parse(storedAuth) : null;
 
 // User registration
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        return rejectWithValue(data.error);
-      }
-      return data;
+      const response = await apiCore.post('/register', userData);
+
+      // Store the entire response.data (includes user and token)
+      sessionStorage.setItem('authToken', JSON.stringify(response.data));
+
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -29,16 +29,12 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async (loginData, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginData),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        return rejectWithValue(data.error);
-      }
-      return data;
+      const response = await apiCore.post('/auth/login', loginData);
+
+      // Store the entire response.data
+      sessionStorage.setItem('authToken', JSON.stringify(response.data));
+
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -49,15 +45,14 @@ export const loginUser = createAsyncThunk(
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
-    user: null,
-    token: null,
+    user: initialAuth?.user || null,
     loading: false,
     error: null,
   },
   reducers: {
     logout: (state) => {
       state.user = null;
-      state.token = null;
+      sessionStorage.removeItem('authToken');
     },
   },
   extraReducers: (builder) => {
@@ -68,7 +63,6 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
@@ -80,7 +74,6 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;

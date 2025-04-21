@@ -7,8 +7,8 @@ import { loginUser } from '../../redux/slices/authSlice';
 import { useDispatch } from 'react-redux';
 
 const Login = () => {
-  const [email, setEmail] = useState(""); // User's email input
-  const [password, setPassword] = useState(""); // User's password input
+  const [email, setEmail] = useState("superadmin@example.com"); // User's email input
+  const [password, setPassword] = useState("supersecurepassword"); // User's password input
   const navigate = useNavigate(); // To navigate to dashboard after successful login
   const dispatch = useDispatch();
 
@@ -17,16 +17,10 @@ const Login = () => {
 
     // Dispatch the loginUser action with email and password
     try {
-      const response = await dispatch(loginUser({ email, password })).unwrap();
-
-      // If successful, store the token in localStorage
-      localStorage.setItem('authToken', response.token);
-
-      // Redirect to dashboard
+      await dispatch(loginUser({ email, password })).unwrap();
       navigate('/dashboard'); // You can use `navigate` from `react-router-dom` for redirection
     } catch (error) {
-      console.error('Login failed:', error);
-      alert('Invalid credentials! Please try again.'); // Show alert for failed login
+      console.error("Login failed:", error); // Handle login failure (e.g., show an error message)
     }
   };
 
