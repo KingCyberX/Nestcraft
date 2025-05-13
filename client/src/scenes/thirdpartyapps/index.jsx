@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AppCard from '../../components/AppCard';
 import { Toaster } from 'react-hot-toast';
-import { fetchApps, addApp, removeApp } from '../../redux/slices/userAppsSlice';
+import { fetchApps, addAppThunk,removeAppThunk, removeApp } from '../../redux/slices/userAppsSlice';
 import {
   Container,
   Typography,
@@ -33,11 +33,11 @@ const ThirdPartyApps = () => {
   );
 
   const [selectedAppId, setSelectedAppId] = useState('');
-
+  const storedUser = sessionStorage.getItem('authToken');
+    const user = storedUser ? JSON.parse(storedUser) : null;
   useEffect(() => {
-    const storedUser = sessionStorage.getItem('authToken');
     try {
-      const user = storedUser ? JSON.parse(storedUser) : null;
+
       //if (user.id) {
         dispatch(fetchApps(user.id));
       //}
@@ -59,7 +59,7 @@ const ThirdPartyApps = () => {
 
     const authToken = crypto.randomUUID();
     await new Promise((resolve) => setTimeout(resolve, 500));
-    dispatch(addApp({ appId: selectedAppId }));
+    dispatch(addAppThunk({ userId:user.id, appId }));
     setSelectedAppId('');
   };
 
@@ -72,12 +72,11 @@ const ThirdPartyApps = () => {
   };
 
   const handleRemoveApp = (appId) => {
-    // Dispatch action to remove the app and move it back to the available apps list
-    dispatch(removeApp(appId));
+    dispatch(removeAppThunk({ userId:user.id, appId }));
   };
 
-  const addedApps = userApps.filter((app) => app.is_added === false); // Apps that are added to the user's list
-  const availableApps = userApps.filter((app) => app.is_added === true); // Apps that are not yet added to the user's list
+  const addedApps = userApps.filter((app) => app.is_added === true); 
+  const availableApps = userApps.filter((app) => app.is_added === false);
   
   if (status === 'loading') {
     return (

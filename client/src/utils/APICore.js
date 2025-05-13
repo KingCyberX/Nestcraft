@@ -63,8 +63,7 @@ class APICore {
   // Fetch data from the API
   get = (url, params) => {
     const user = this.getLoggedInUser();
-    const token = user ? user.token : null; // Get token from session if exists
-
+    const token = user ? user.token : null;
     if (token) {
       setAuthorization(token); // Dynamically set the Authorization header
     }

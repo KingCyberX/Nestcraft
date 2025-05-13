@@ -165,7 +165,7 @@ const getAppsForUser = async (req, res) => {
 
     // Step 2: Get all apps assigned to the tier
     const [apps] = await db.execute(
-      "SELECT a.id,a.app_name, a.auth_token,a.description,a.image_url, a.app_url,a.added FROM third_party_apps a JOIN tier_apps ta ON a.id = ta.app_id WHERE ta.tier_id = ?",
+      "SELECT t.tier_name,t.description,a.id,a.app_name, a.auth_token,a.description,a.image_url, a.app_url,a.added FROM third_party_apps a JOIN tier_apps ta ON a.id = ta.app_id JOIN  tiers t ON t.id = ta.tier_id WHERE ta.tier_id = ?",
       [tier_id]
     );
 
@@ -180,7 +180,7 @@ const getAppsForUser = async (req, res) => {
   }
 };
 const rmAppsIs_AddedFromUserApps = async (req, res) => {
-  const { user_id, row_id, actionType } = req.params;  // actionType should be 'add' or 'remove'
+  const { user_id, row_id, actionType } = req.body;  // actionType should be 'add' or 'remove'
 
   try {
     // Step 1: Validate actionType

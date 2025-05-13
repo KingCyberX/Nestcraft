@@ -11,13 +11,16 @@ export const fetchApps = createAsyncThunk(
   'userApps/fetchApps',
   async (userId, { rejectWithValue }) => {
     try {
+      // Use the userId argument passed to the thunk
+      //const response = await apiCore.get(`/userApps/getAppsForUser/${userId}`);
       const response = await apiCore.get(`/userApps/getAppsForUser/${2}`);
       return response.data;  
     } catch (error) {
       return rejectWithValue(error.message);
     }
-  }
+  }   
 );
+
 export const appAddedList = createAsyncThunk(
   'userApps/appAddedList',
   async ({ userId, appId, actionType }, { rejectWithValue }) => {
@@ -35,22 +38,58 @@ export const appAddedList = createAsyncThunk(
   }
 );
 
+export const addAppThunk = createAsyncThunk(
+  'apps/addAppThunk',
+  async ({ userId, appId }, { dispatch }) => {
+    try {
+      await apiCore.post('/userApps/updateAppToList', { userId, appId,actionType:"add" });
+
+      dispatch(addApp({ appId }));
+    } catch (error) {
+      console.error(error);
+    }
+  }
+);
+
+export const removeAppThunk = createAsyncThunk(
+  'apps/removeAppThunk',
+  async ({ userId, appId }, { dispatch }) => {
+    try {
+      await apiCore.post('/userApps/updateAppToList', { userId, appId,actionType:"remove" });
+
+      dispatch(removeApp(appId));
+    } catch (error) {
+      console.error(error);
+    }
+  }
+);
+
 const userAppsSlice = createSlice({
   name: 'userApps',
   initialState,
   reducers: {
     addApp: (state, action) => {
-      state.apps.push({
-        appId: action.payload.appId,
-        authToken: action.payload.authToken,
-        is_added: true,
-        addedAt: new Date().toISOString(),
-      });
+      const { appId } = action.payload;
+      const existingApp = state.apps.find((app) => app.appId === appId);
+    
+      if (existingApp) {
+        existingApp.is_added = true;
+        existingApp.addedAt = new Date().toISOString();
+      } else {
+        state.apps.push({
+          appId,
+          is_added: true,
+          addedAt: new Date().toISOString(),
+        });
+      }
     },
-    // Action to remove an app directly from Redux state
+    
     removeApp: (state, action) => {
-      state.apps = state.apps.filter((app) => app.appId !== action.payload);
-    },
+      const app = state.apps.find((a) => a.appId === action.payload);
+      if (app) {
+        app.is_added = false;
+      }
+    }    
   },
   extraReducers: (builder) => {
     builder
@@ -68,7 +107,6 @@ const userAppsSlice = createSlice({
           is_added: Boolean(app.added),
           addedAt: new Date().toISOString(),
         }));
-
       })
       .addCase(fetchApps.rejected, (state, action) => {
         state.status = 'failed'; // Set failure state if an error occurs

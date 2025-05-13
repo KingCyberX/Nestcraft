@@ -32,9 +32,9 @@ export const loginUser = createAsyncThunk(
       const response = await apiCore.post('/auth/login', loginData);
 
       // Store the entire response.data
-      sessionStorage.setItem('authToken', JSON.stringify(response.data));
+      sessionStorage.setItem('authToken', JSON.stringify(response.data.user));
 
-      return response.data;
+      return response.data.user;
     } catch (error) {
       return rejectWithValue(error.message);
     }

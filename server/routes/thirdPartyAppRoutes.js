@@ -18,6 +18,6 @@ router.delete("/deleteapp/:app_id", authenticateAndAuthorize(['super_admin']), d
 router.post("/assignapptotier", authenticateAndAuthorize(['super_admin']), assignAppToTier);
 router.post("/removeapptotier", authenticateAndAuthorize(['super_admin']), removeAppFromTier);
 router.get("/getAppsForUser/:user_id", authenticateAndAuthorize(['admin', 'super_admin']), getAppsForUser);
-router.get("/updateAppToList", authenticateAndAuthorize(['admin', 'super_admin']), rmAppsIs_AddedFromUserApps);
+router.get("/updateAppToList", authenticateAndAuthorize(['admin', 'super_admin','user']), rmAppsIs_AddedFromUserApps);
 
 module.exports = router;
