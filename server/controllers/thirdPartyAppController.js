@@ -84,32 +84,46 @@ const deleteThirdPartyApp = async (req, res) => {
 
 // Assign a third-party app to a tier
 const assignAppToTier = async (req, res) => {
-  const { tier_id, app_id } = req.body;
+    const { app_id } = req.params;
+  const { tierIds: newTierIds } = req.body; // Expect array of tier IDs from client
 
-  if (!tier_id || !app_id) {
-    return res.status(400).json({ error: "Tier ID and App ID are required" });
+  if (!Array.isArray(newTierIds)) {
+    return res.status(400).json({ error: "tierIds must be an array" });
   }
 
   try {
-    // Check if the app is already assigned to the tier
-    const [existingAssignment] = await db.execute(
-      "SELECT * FROM tier_apps WHERE tier_id = ? AND app_id = ?",
-      [tier_id, app_id]
+    // 1. Get existing assigned tiers for this app
+    const [existingTiers] = await db.execute(
+      "SELECT tier_id FROM tier_apps WHERE app_id = ?",
+      [app_id]
     );
+    const existingTierIds = existingTiers.map(row => row.tier_id);
 
-    if (existingAssignment.length > 0) {
-      return res.status(400).json({ error: "App is already assigned to this tier" });
+    // 2. Determine tiers to insert and delete
+    const toInsert = newTierIds.filter(id => !existingTierIds.includes(id));
+    const toDelete = existingTierIds.filter(id => !newTierIds.includes(id));
+
+    // 3. Delete tiers that are no longer assigned
+    if (toDelete.length > 0) {
+      await db.execute(
+        `DELETE FROM tier_apps WHERE app_id = ? AND tier_id IN (${toDelete.map(() => '?').join(',')})`,
+        [app_id, ...toDelete]
+      );
     }
 
-    // Assign the app to the tier
-    await db.execute(
-      "INSERT INTO tier_apps (tier_id, app_id) VALUES (?, ?)",
-      [tier_id, app_id]
-    );
+    // 4. Insert new tier assignments
+    if (toInsert.length > 0) {
+      const values = toInsert.map(tier_id => [app_id, tier_id]);
+      await db.query(
+        "INSERT INTO tier_apps (app_id, tier_id) VALUES ?",
+        [values]
+      );
+    }
 
-    res.status(201).json({ message: "App assigned to tier successfully" });
+    // 5. Return the updated assignments
+    res.json({ appId: app_id, assignedTiers: newTierIds });
   } catch (error) {
-    console.error("Error assigning app to tier:", error);
+    console.error("Error assigning tiers to app:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -144,8 +158,7 @@ const removeAppFromTier = async (req, res) => {
     console.error("Error removing app from tier:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
-};
-// Get all apps assigned to a specific user
+};// Get all apps assigned to a specific user
 const getAppsForUser = async (req, res) => {
   const { user_id } = req.params;
 
@@ -165,12 +178,12 @@ const getAppsForUser = async (req, res) => {
 
     // Step 2: Get all apps assigned to the tier
     const [apps] = await db.execute(
-      "SELECT t.tier_name,t.description,a.id,a.app_name, a.auth_token,a.description,a.image_url, a.app_url,a.added FROM third_party_apps a JOIN tier_apps ta ON a.id = ta.app_id JOIN  tiers t ON t.id = ta.tier_id WHERE ta.tier_id = ?",
+      "SELECT t.tier_name,t.description as tier_description,a.id,a.app_name, a.auth_token,a.description,a.image_url, a.app_url,a.added FROM third_party_apps a JOIN tier_apps ta ON a.id = ta.app_id JOIN  tiers t ON t.id = ta.tier_id WHERE ta.tier_id = ?",
       [tier_id]
     );
 
     if (apps.length === 0) {
-      return res.status(404).json({ error: "No apps found for this tier" });
+      return res.status(404).json({ error: "No apps found for this User" });
     }
 
     res.status(200).json(apps);
@@ -179,6 +192,72 @@ const getAppsForUser = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+// Get all apps assigned to a specific user
+const getAppsForTier = async (req, res) => {
+  const { app_id } = req.params;
+
+  try {
+
+   const [tiers] = await db.execute(
+    `SELECT t.id, t.tier_name
+     FROM tiers t
+     JOIN tier_apps ta ON t.id = ta.tier_id
+     WHERE ta.app_id = ?`,
+    [app_id]
+  );
+
+    res.json({ appId: app_id, assignedTiers: tiers.map(t => t.id) });
+  } catch (error) {
+    console.error("Error fetching apps for user:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+const assignTiersToApp = async (req, res) => {
+  const { app_id } = req.params;
+  const { tierIds: newTierIds } = req.body; // Expect array of tier IDs from client
+
+  if (!Array.isArray(newTierIds)) {
+    return res.status(400).json({ error: "tierIds must be an array" });
+  }
+
+  try {
+    // 1. Get existing assigned tiers for this app
+    const [existingTiers] = await db.execute(
+      "SELECT tier_id FROM tier_apps WHERE app_id = ?",
+      [app_id]
+    );
+    const existingTierIds = existingTiers.map(row => row.tier_id);
+
+    // 2. Determine tiers to insert and delete
+    const toInsert = newTierIds.filter(id => !existingTierIds.includes(id));
+    const toDelete = existingTierIds.filter(id => !newTierIds.includes(id));
+
+    // 3. Delete tiers that are no longer assigned
+    if (toDelete.length > 0) {
+      await db.execute(
+        `DELETE FROM tier_apps WHERE app_id = ? AND tier_id IN (${toDelete.map(() => '?').join(',')})`,
+        [app_id, ...toDelete]
+      );
+    }
+
+    // 4. Insert new tier assignments
+    if (toInsert.length > 0) {
+      const values = toInsert.map(tier_id => [app_id, tier_id]);
+      await db.query(
+        "INSERT INTO tier_apps (app_id, tier_id) VALUES ?",
+        [values]
+      );
+    }
+
+    // 5. Return the updated assignments
+    res.json({ appId: app_id, assignedTiers: newTierIds });
+  } catch (error) {
+    console.error("Error assigning tiers to app:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
 const rmAppsIs_AddedFromUserApps = async (req, res) => {
   const { user_id, row_id, actionType } = req.body;  // actionType should be 'add' or 'remove'
 
@@ -222,6 +301,87 @@ const rmAppsIs_AddedFromUserApps = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+const GetAllApps = async (req, res) => {
+
+  try {
+
+    const [apps] = await db.execute(
+      'SELECT * FROM third_party_apps',
+    );
+
+    res.status(200).json({ message: 'App Get successfully.', apps });
+  } catch (error) {
+    console.error('Error updating app:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+const deleteApp = async (req, res) => {
+  const appId = req.params.id;
+
+  try {
+    const [result] = await db.execute(
+      'DELETE FROM third_party_apps WHERE id = ?',
+      [appId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'App not found' });
+    }
+
+    res.status(200).json({ message: 'App deleted successfully.', id: parseInt(appId) });
+  } catch (error) {
+    console.error('Error deleting app:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+const createApp = async (req, res) => {
+  const { app_name, app_url, description, image_url, tier_name, tier_description } = req.body;
+
+  try {
+    const [result] = await db.execute(
+      `INSERT INTO third_party_apps (app_name, app_url, description, image_url, tier_name, tier_description)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [app_name, app_url, description, image_url, tier_name, tier_description]
+    );
+
+    const [newApp] = await db.execute(
+      'SELECT * FROM third_party_apps WHERE id = ?',
+      [result.insertId]
+    );
+
+    res.status(201).json(newApp[0]);
+  } catch (error) {
+    console.error('Error creating app:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+const updateApp = async (req, res) => {
+  const appId = req.params.id;
+  const { app_name, app_url, description, image_url, tier_name, tier_description } = req.body;
+
+  try {
+    const [result] = await db.execute(
+      `UPDATE third_party_apps 
+       SET app_name = ?, app_url = ?, description = ?, image_url = ?, tier_name = ?, tier_description = ?
+       WHERE id = ?`,
+      [app_name, app_url, description, image_url, tier_name, tier_description, appId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'App not found' });
+    }
+
+    const [updatedApp] = await db.execute(
+      'SELECT * FROM third_party_apps WHERE id = ?',
+      [appId]
+    );
+
+    res.status(200).json(updatedApp[0]);
+  } catch (error) {
+    console.error('Error updating app:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
 
 module.exports = {
   createThirdPartyApp,
@@ -230,5 +390,6 @@ module.exports = {
   assignAppToTier,
   removeAppFromTier,
   getAppsForUser,
-  rmAppsIs_AddedFromUserApps
+  rmAppsIs_AddedFromUserApps,
+  GetAllApps,updateApp,createApp,deleteApp,getAppsForTier,assignTiersToApp
 };

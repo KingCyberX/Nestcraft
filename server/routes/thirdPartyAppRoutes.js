@@ -5,7 +5,7 @@ const {
   deleteThirdPartyApp,
   assignAppToTier,
   removeAppFromTier,
-  getAppsForUser,rmAppsIs_AddedFromUserApps
+  getAppsForUser,rmAppsIs_AddedFromUserApps,GetAllApps,updateApp,createApp,deleteApp,getAppsForTier
 } = require("../controllers/thirdPartyAppController");
 
 const { authenticateAndAuthorize } = require("../middleware/authMiddleware"); // Authorization middleware
@@ -15,9 +15,14 @@ const router = express.Router();
 router.post("/createapp", authenticateAndAuthorize(['super_admin']), createThirdPartyApp);
 router.put("/updateapp/:app_id", authenticateAndAuthorize(['super_admin']), updateThirdPartyApp);
 router.delete("/deleteapp/:app_id", authenticateAndAuthorize(['super_admin']), deleteThirdPartyApp);
-router.post("/assignapptotier", authenticateAndAuthorize(['super_admin']), assignAppToTier);
+router.post("/assignapptotier/:app_id", authenticateAndAuthorize(['super_admin']), assignAppToTier);
 router.post("/removeapptotier", authenticateAndAuthorize(['super_admin']), removeAppFromTier);
 router.get("/getAppsForUser/:user_id", authenticateAndAuthorize(['admin', 'super_admin']), getAppsForUser);
+router.get("/getassignedtier/:app_id", authenticateAndAuthorize(['admin', 'super_admin']), getAppsForTier);
 router.get("/updateAppToList", authenticateAndAuthorize(['admin', 'super_admin','user']), rmAppsIs_AddedFromUserApps);
+router.get("/getallapps", authenticateAndAuthorize(['admin', 'super_admin']), GetAllApps);
+router.put("/update/:id", authenticateAndAuthorize(['admin', 'super_admin']), updateApp);
+router.post("/createApp", authenticateAndAuthorize(['admin', 'super_admin']), createApp);
+router.delete( "/delete/:id", authenticateAndAuthorize(['admin', 'super_admin']), deleteApp);
 
 module.exports = router;

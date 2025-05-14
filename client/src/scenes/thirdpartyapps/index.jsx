@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AppCard from '../../components/AppCard';
 import { Toaster } from 'react-hot-toast';
-import { fetchApps, addAppThunk,removeAppThunk, removeApp } from '../../redux/slices/userAppsSlice';
+import { fetchTierApps, addAppThunk,removeAppThunk, removeApp } from '../../redux/slices/userAppsSlice';
 import {
   Container,
   Typography,
@@ -23,7 +23,7 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 
 const ThirdPartyApps = () => {
   const dispatch = useDispatch();
-  const userApps = useSelector((state) => state.userApps.apps); // get userApps from redux store
+  const userApps = useSelector((state) => state.userApps.app); // get userApps from redux store
   const status = useSelector((state) => state.userApps.status);
   const error = useSelector((state) => state.userApps.error);
 
@@ -39,7 +39,7 @@ const ThirdPartyApps = () => {
     try {
 
       //if (user.id) {
-        dispatch(fetchApps(user.id));
+        dispatch(fetchTierApps(user.id));
       //}
     } catch (error) {
       console.error('Error parsing authToken from sessionStorage:', error);
@@ -144,7 +144,7 @@ const ThirdPartyApps = () => {
 
         <Box>
           <Typography variant="h5" fontWeight="bold" mb={3}>
-            My Apps
+            Allocated Tier Apps <b>{ userApps[0]?.tier_name?? ''}</b>
           </Typography>
           <Grid container spacing={3}>
             {addedApps.length > 0 ? (

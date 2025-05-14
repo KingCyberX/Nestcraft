@@ -3,7 +3,7 @@ const config = require('config');  // Use the config module to load configuratio
 
 // Centralized config object
 const centralizedConfig = {
-  port: config.get('port') || 5000,  // Get the port from config or fallback to 5000
+  port: config.get('port') || 6000,  // Get the port from config or fallback to 5000
   jwtSecret: config.get('jwtSecret'),  // Fetch JWT Secret from config
   db: {
     host: config.get('db.host'),  // Get DB host from config

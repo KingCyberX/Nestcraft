@@ -81,7 +81,16 @@ class APICore {
 
     return axios.post(url, data);
   };
+  put = (url, data) => {
+    const user = this.getLoggedInUser();
+    const token = user ? user.token : null; // Get token from session if exists
 
+    if (token) {
+      setAuthorization(token); // Dynamically set the Authorization header
+    }
+
+    return axios.put(url, data);
+  };
   update = (url, data) => {
     const user = this.getLoggedInUser();
     const token = user ? user.token : null; // Get token from session if exists

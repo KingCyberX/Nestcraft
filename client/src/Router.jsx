@@ -26,7 +26,7 @@ import {
 } from "./scenes";
 import PermissionsPage from "./scenes/permissions";
 import ThirdPartyApps from "./scenes/thirdpartyapps";
-
+import ThirdPartySettings from "./scenes/thirdpartysettings";
 // Check if the user is authenticated (token exists in localStorage)
 const isAuthenticated = () => {
   const user = sessionStorage.getItem("authToken"); // Get the stored user data
@@ -79,6 +79,7 @@ const AppRouter = () => {
           <Route path="/team" element={<ProtectedRoute element={<Team />} />} />
            <Route path="/Permissions" element={<ProtectedRoute element={<PermissionsPage />} />} />
            <Route path="/thirdpartyapps" element={<ProtectedRoute element={<ThirdPartyApps />} />} />
+           <Route path="/thirdpartyappssettings" element={<ProtectedRoute element={<ThirdPartySettings />} />} />
 
           <Route
             path="/contacts"

@@ -2,14 +2,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { apiCore } from '../../utils/APICore'; // Assuming apiCore utility is in this path
 
-const API_URL = "http://localhost:5000/api";
 
 // Fetch all permissions
 export const fetchPermissions = createAsyncThunk(
   'permissions/Permissions',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiCore.get(`${API_URL}/permissions/Permissions`);
+      const response = await apiCore.get(`/permissions/Permissions`);
       return response.data;
     } catch (error) {                                                                         
       return rejectWithValue(error.message);
@@ -22,7 +21,7 @@ export const createPermission = createAsyncThunk(
   'permissions/createPermission',
   async ({ permissionData, authToken }, { rejectWithValue }) => {
     try {
-      const response = await apiCore.post(`${API_URL}/permissions`, permissionData, {
+      const response = await apiCore.post(`/permissions`, permissionData, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
         },
@@ -39,7 +38,7 @@ export const updatePermission = createAsyncThunk(
   'permissions/updatePermission',
   async ({ id, permissionData, authToken }, { rejectWithValue }) => {
     try {
-      const response = await apiCore.update(`${API_URL}/permissions/${id}`, permissionData, {
+      const response = await apiCore.update(`/permissions/${id}`, permissionData, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
         },
@@ -56,7 +55,7 @@ export const assignPermissionToRole = createAsyncThunk(
   'permissions/assignPermissionToRole',
   async ({ roleId, permissionId }, { rejectWithValue }) => {
     try {
-      const response = await apiCore.post(`${API_URL}/roles/${roleId}/permissions`, { permissionId }, {
+      const response = await apiCore.post(`/roles/${roleId}/permissions`, { permissionId }, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
         },
@@ -101,7 +100,7 @@ export const updateAssignedPermissionOfRole = createAsyncThunk(
   'permissions/updateAssignedPermissionOfRole',
   async ({ roleId, permissions }, { rejectWithValue }) => {
     try {
-      const response = await apiCore.put(`${API_URL}/roles/${roleId}/permissions`, {
+      const response = await apiCore.put(`/roles/${roleId}/permissions`, {
         permissions,
       });
       return response.data; // Return updated permissions

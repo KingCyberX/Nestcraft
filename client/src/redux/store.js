@@ -6,6 +6,7 @@ import authReducer from './slices/authSlice';
 import permissionsReducer from './slices/permissionsSlice';
 import rolesReducer from './slices/rolesSlice';
 import {userAppsReducer} from './slices/userAppsSlice';
+import userReducer from './slices/userSlice'; 
 export const store = configureStore({
   reducer: {
     userApps: userAppsReducer,
@@ -15,5 +16,6 @@ export const store = configureStore({
     auth: authReducer,
     permissions: permissionsReducer,
     roles: rolesReducer,
+    users: userReducer,
   },
 });

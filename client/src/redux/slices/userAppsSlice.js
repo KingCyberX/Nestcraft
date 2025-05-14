@@ -7,13 +7,24 @@ const initialState = {
   error: null,    
 };
 
-export const fetchApps = createAsyncThunk(
+export const fetchTierApps = createAsyncThunk(
   'userApps/fetchApps',
   async (userId, { rejectWithValue }) => {
     try {
       // Use the userId argument passed to the thunk
       //const response = await apiCore.get(`/userApps/getAppsForUser/${userId}`);
       const response = await apiCore.get(`/userApps/getAppsForUser/${2}`);
+      return response.data;  
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }   
+);
+export const fetchAllApps = createAsyncThunk(
+  'userApps/fetchAllApps',
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await apiCore.get(`/userApps/getallapps`);
       return response.data;  
     } catch (error) {
       return rejectWithValue(error.message);
@@ -63,6 +74,42 @@ export const removeAppThunk = createAsyncThunk(
     }
   }
 );
+export const createAppThunk = createAsyncThunk(
+  'apps/createApp',
+  async (newApp, { rejectWithValue }) => {
+    try {
+      const response = await apiCore.post('/userApps/createApp', newApp);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const updateAppThunk = createAsyncThunk(
+  'apps/updateApp',
+  async (updatedApp, { rejectWithValue }) => {
+    try {
+      const response = await apiCore.put(`/userApps/updateApp/${updatedApp.id}`, updatedApp);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const deleteAppThunk = createAsyncThunk(
+  'apps/deleteApp',
+  async (appId, { rejectWithValue }) => {
+    try {
+      const response = await apiCore.delete(`/userApps/deleteApp/${appId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 
 const userAppsSlice = createSlice({
   name: 'userApps',
@@ -93,10 +140,10 @@ const userAppsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchApps.pending, (state) => {
+      .addCase(fetchTierApps.pending, (state) => {
         state.status = 'loading';
       })
-      .addCase(fetchApps.fulfilled, (state, action) => {
+      .addCase(fetchTierApps.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.apps = action.payload.map(app => ({
           appId: app.id,
@@ -104,11 +151,25 @@ const userAppsSlice = createSlice({
           appUrl: app.app_url,
           description: app.description,
           imageUrl: app.image_url,
+          tier_name: app.tier_name,
+          description: app.tier_description,
           is_added: Boolean(app.added),
           addedAt: new Date().toISOString(),
         }));
       })
-      .addCase(fetchApps.rejected, (state, action) => {
+      .addCase(fetchTierApps.rejected, (state, action) => {
+        state.status = 'failed'; // Set failure state if an error occurs
+        state.error = action.payload; // Store error message
+      })
+      // Handle the fetchAllApps action
+      .addCase(fetchAllApps.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchAllApps.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.apps = action.payload;
+      })
+      .addCase(fetchAllApps.rejected, (state, action) => {
         state.status = 'failed'; // Set failure state if an error occurs
         state.error = action.payload; // Store error message
       })
@@ -126,6 +187,8 @@ const userAppsSlice = createSlice({
           appUrl: app.app_url,
           description: app.description,
           imageUrl: app.image_url,
+          tier_name: app.tier_name,
+          description: app.tier_description,
           is_added: Boolean(app.added),
           addedAt: new Date().toISOString(),
         }));
@@ -133,6 +196,46 @@ const userAppsSlice = createSlice({
       .addCase(appAddedList.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
+      })
+      // Handle the addAppThunk action
+  .addCase(createAppThunk.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(createAppThunk.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.apps.push(action.payload); // Add new app to the state
+      })
+      .addCase(createAppThunk.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload; // Store error message
+      })
+
+      // updateAppThunk
+      .addCase(updateAppThunk.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(updateAppThunk.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        const index = state.apps.findIndex((app) => app.id === action.payload.id);
+        if (index !== -1) state.apps[index] = action.payload; // Update app
+      })
+      .addCase(updateAppThunk.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload; // Store error message
+      })
+
+      // deleteAppThunk
+      .addCase(deleteAppThunk.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(deleteAppThunk.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        const index = state.apps.findIndex((app) => app.id === action.payload.id);
+        if (index !== -1) state.apps.splice(index, 1); // Remove app from state
+      })
+      .addCase(deleteAppThunk.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload; // Store error message
       });
   },
 });

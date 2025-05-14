@@ -182,7 +182,12 @@ const SideBar = () => {
             colors={colors}
             icon={<PersonOutlined />}
           />
-
+          <Item
+            title="AppsSettings"
+            path="/thirdpartyappssettings"
+            colors={colors}
+            icon={<PersonOutlined />}
+          />
           <Item
             title="Event Management"
             path="/"
