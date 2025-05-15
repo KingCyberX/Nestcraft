@@ -20,6 +20,19 @@ export const fetchTierApps = createAsyncThunk(
     }
   }   
 );
+
+export const createauthtoken = createAsyncThunk(
+  'userApps/createauthtoken',
+  async (userId, { rejectWithValue }) => {
+    try {
+
+      const response = await apiCore.get(`/userApps/authtoken/${userId}`);
+      return response.data;  
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }   
+);
 export const fetchAllApps = createAsyncThunk(
   'userApps/fetchAllApps',
   async (userId, { rejectWithValue }) => {

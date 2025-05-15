@@ -368,6 +368,28 @@ const GetAllApps = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+const createauthtoken = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const authToken = crypto.randomUUID();
+
+    const [result] = await db.execute(
+      'UPDATE users SET auth_token = ? WHERE id = ?',
+      [authToken, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'Auth token generated', authToken });
+  } catch (error) {
+    console.error('Error updating user auth token:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 const deleteApp = async (req, res) => {
   const appId = req.params.id;
 
@@ -444,5 +466,5 @@ module.exports = {
   removeAppFromTier,
   getAppsForUser,
   rmAppsIs_AddedFromUserApps,
-  GetAllApps,updateApp,createApp,deleteApp,getAppsForTier,assignTiersToApp
+  GetAllApps,updateApp,createApp,deleteApp,getAppsForTier,assignTiersToApp,createauthtoken
 };

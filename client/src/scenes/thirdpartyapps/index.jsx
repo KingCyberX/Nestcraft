@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AppCard from '../../components/AppCard';
 import { Toaster } from 'react-hot-toast';
-import { fetchTierApps, addAppThunk,removeAppThunk, removeApp } from '../../redux/slices/userAppsSlice';
+import { fetchTierApps, addAppThunk,removeAppThunk, removeApp ,createauthtoken} from '../../redux/slices/userAppsSlice';
 import {
   Container,
   Typography,
@@ -65,13 +65,24 @@ const ThirdPartyApps = () => {
     setSelectedAppId('');
   };
 
-  const handleOpenApp = (appId) => {
-    const userApp = userApps.find((app) => app.appId === appId);
-    if (userApp) {
-      const redirectUrl = `${userApp.appUrl}?auth_token=${userApp.authToken}`;
-      window.open(redirectUrl, '_blank');
+const handleOpenApp = async (appId) => {
+  try {
+    const resultAction = await dispatch(createauthtoken(user.id));
+    if (createauthtoken.fulfilled.match(resultAction)) {
+      const newAuthToken = resultAction.payload.authToken;
+      const userApp = userApps.find(app => app.appId === appId);
+      if (userApp) {
+        const redirectUrl = `${userApp.appUrl}?authtoken=${newAuthToken}`;
+        window.open(redirectUrl, '_blank');
+      }
+    } else {
+      console.error('Failed to get auth token:', resultAction.payload || resultAction.error);
     }
-  };
+  } catch (error) {
+    console.error('Unexpected error:', error);
+  }
+};
+
 
   const handleRemoveApp = (appId) => {
     dispatch(removeAppThunk({ userId:user.id, appId }));
