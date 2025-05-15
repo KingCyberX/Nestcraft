@@ -163,35 +163,88 @@ const getAppsForUser = async (req, res) => {
   const { user_id } = req.params;
 
   try {
-    // Step 1: Get the tier_id for the user
-    const [userTier] = await db.execute(
-      "SELECT tier_id FROM users WHERE id = ?",
+    // Get user role and access code
+    const [users] = await db.execute(
+      `SELECT u.access_code, r.role_name
+       FROM users u
+       JOIN roles r ON u.role_id = r.id
+       WHERE u.id = ?`,
       [user_id]
     );
 
-    // Check if the user exists and has an assigned tier
-    if (userTier.length === 0) {
+    if (users.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const tier_id = userTier[0].tier_id;
+    const user = users[0];
 
-    // Step 2: Get all apps assigned to the tier
-    const [apps] = await db.execute(
-      "SELECT t.tier_name,t.description as tier_description,a.id,a.app_name, a.auth_token,a.description,a.image_url, a.app_url,a.added FROM third_party_apps a JOIN tier_apps ta ON a.id = ta.app_id JOIN  tiers t ON t.id = ta.tier_id WHERE ta.tier_id = ?",
-      [tier_id]
-    );
+    const isAdmin = 
+      (user.role_name === "super_admin" || user.role_name === "admin") ||
+      (user.access_code === 1000 || user.access_code === 1001);
 
-    if (apps.length === 0) {
-      return res.status(404).json({ error: "No apps found for this User" });
+    if (isAdmin) {
+      // Admin: select all apps with concatenated tier names and descriptions
+      const [apps] = await db.execute(
+        `SELECT 
+           a.id, 
+           a.app_name, 
+           a.auth_token, 
+           a.description AS app_description,
+           a.image_url, 
+           a.app_url,
+           GROUP_CONCAT(DISTINCT t.tier_name) AS tiers_names,
+           GROUP_CONCAT(DISTINCT t.description) AS tiers_descriptions
+         FROM third_party_apps a
+         LEFT JOIN tier_apps ta ON a.id = ta.app_id
+         LEFT JOIN tiers t ON ta.tier_id = t.id
+         GROUP BY a.id, a.app_name, a.auth_token, a.description, a.image_url, a.app_url`
+      );
+
+      return res.status(200).json(apps);
+    } else {
+      // Non-admin: get user's tier_id
+      const [userTier] = await db.execute(
+        "SELECT tier_id FROM users WHERE id = ?",
+        [user_id]
+      );
+
+      if (userTier.length === 0) {
+        return res.status(404).json({ error: "User tier not found" });
+      }
+
+      const tier_id = userTier[0].tier_id;
+
+      // Get apps assigned to user's tier
+      const [apps] = await db.execute(
+        `SELECT 
+           t.tier_name, 
+           t.description AS tier_description,
+           a.id, 
+           a.app_name, 
+           a.auth_token,
+           a.description, 
+           a.image_url, 
+           a.app_url, 
+           a.added 
+         FROM third_party_apps a
+         JOIN tier_apps ta ON a.id = ta.app_id
+         JOIN tiers t ON t.id = ta.tier_id
+         WHERE ta.tier_id = ?`,
+        [tier_id]
+      );
+
+      if (apps.length === 0) {
+        return res.status(404).json({ error: "No apps found for this user" });
+      }
+
+      return res.status(200).json(apps);
     }
-
-    res.status(200).json(apps);
   } catch (error) {
     console.error("Error fetching apps for user:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 // Get all apps assigned to a specific user
 const getAppsForTier = async (req, res) => {
   const { app_id } = req.params;

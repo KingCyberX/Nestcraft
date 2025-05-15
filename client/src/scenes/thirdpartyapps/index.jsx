@@ -23,18 +23,9 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 
 const ThirdPartyApps = () => {
   const dispatch = useDispatch();
-  const userApps = useSelector((state) => state.userApps.app); // get userApps from redux store
+  const userApps = useSelector((state) => state.userApps.apps); // get userApps from redux store
   const status = useSelector((state) => state.userApps.status);
   const error = useSelector((state) => state.userApps.error);
-
-  const muiTheme = useMuiTheme();
-  const [themeMode, setThemeMode] = useState(() =>
-    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  );
-
-  const [selectedAppId, setSelectedAppId] = useState('');
-  const storedUser = sessionStorage.getItem('authToken');
-    const user = storedUser ? JSON.parse(storedUser) : null;
   useEffect(() => {
     try {
 
@@ -45,6 +36,17 @@ const ThirdPartyApps = () => {
       console.error('Error parsing authToken from sessionStorage:', error);
     }
   }, [dispatch]);
+
+
+  const muiTheme = useMuiTheme();
+  const [themeMode, setThemeMode] = useState(() =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  );
+
+  const [selectedAppId, setSelectedAppId] = useState('');
+  const storedUser = sessionStorage.getItem('authToken');
+  const user = storedUser ? JSON.parse(storedUser) : null;
+
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', themeMode === 'dark');
@@ -75,8 +77,9 @@ const ThirdPartyApps = () => {
     dispatch(removeAppThunk({ userId:user.id, appId }));
   };
 
-  const addedApps = userApps.filter((app) => app.is_added === true); 
-  const availableApps = userApps.filter((app) => app.is_added === false);
+const addedApps = (userApps || []).filter(app => app.is_added === false);
+const availableApps = (userApps || []).filter(app => app.is_added === true);
+
   
   if (status === 'loading') {
     return (
@@ -157,14 +160,14 @@ const ThirdPartyApps = () => {
                       isInUserList={true}
                       onOpenApp={handleOpenApp}
                     />
-                    <Button
+                    {/* <Button
                       variant="outlined"
                       color="error"
                       onClick={() => handleRemoveApp(userApp.appId)}
                       sx={{ marginTop: 2 }}
                     >
                       Remove
-                    </Button>
+                    </Button> */}
                   </Box>
                 </Grid>
               ))

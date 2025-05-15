@@ -12,8 +12,8 @@ export const fetchTierApps = createAsyncThunk(
   async (userId, { rejectWithValue }) => {
     try {
       // Use the userId argument passed to the thunk
-      //const response = await apiCore.get(`/userApps/getAppsForUser/${userId}`);
-      const response = await apiCore.get(`/userApps/getAppsForUser/${2}`);
+      const response = await apiCore.get(`/userApps/getAppsForUser/${userId}`);
+      //const response = await apiCore.get(`/userApps/getAppsForUser/${2}`);
       return response.data;  
     } catch (error) {
       return rejectWithValue(error.message);
