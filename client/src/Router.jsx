@@ -55,6 +55,16 @@ const AppRouter = () => {
     <Router>
       <Routes>
         <Route
+          path="/"
+          element={
+            isAuthenticated() ? (
+              <Navigate to="/dashboard" />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+        <Route
           path="/login"
           element={
             isAuthenticated() ? (

@@ -42,7 +42,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     // Clear token or perform logout actions here
-    localStorage.removeItem("authToken");
+    sessionStorage.removeItem("authToken");
     handleMenuClose(); // Close the dropdown after logout
     window.location.href = "/login"; // Redirect to the login page
   };

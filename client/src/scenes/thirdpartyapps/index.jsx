@@ -88,8 +88,8 @@ const handleOpenApp = async (appId) => {
     dispatch(removeAppThunk({ userId:user.id, appId }));
   };
 
-const addedApps = (userApps || []).filter(app => app.is_added === false);
-const availableApps = (userApps || []).filter(app => app.is_added === true);
+const addedApps = Array.isArray(userApps) ? userApps.filter(app => app.is_added === false) : [];
+const availableApps = Array.isArray(userApps) ? userApps.filter(app => app.is_added === true) : [];
 
   
   if (status === 'loading') {
