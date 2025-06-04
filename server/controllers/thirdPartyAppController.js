@@ -369,15 +369,28 @@ const GetAllApps = async (req, res) => {
   }
 };
 const createauthtoken = async (req, res) => {
-  const { id } = req.params;
+  const { id, app_name } = req.params;
 
   try {
-    const authToken = crypto.randomUUID();
+    let authToken = crypto.randomUUID();
+    let result = null;
 
-    const [result] = await db.execute(
-      'UPDATE users SET auth_token = ? WHERE id = ?',
-      [authToken, id]
-    );
+    if (app_name === 'Nestcraft_Home_Service') {
+      // Update auth_token field
+      [result] = await db.execute(
+        'select auth_token2 from users WHERE id = ? LIMIT 1',
+        [id]
+      );
+      console.log(result);
+       authToken = result[0]?.auth_token2;
+
+    } else {
+      // Update auth_token2 field
+      [result] = await db.execute(
+        'UPDATE users SET auth_token = ? WHERE id = ?',
+        [authToken, id]
+      );
+    }
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'User not found' });

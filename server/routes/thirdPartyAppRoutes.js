@@ -24,6 +24,6 @@ router.get("/getallapps", authenticateAndAuthorize(['admin', 'super_admin']), Ge
 router.put("/update/:id", authenticateAndAuthorize(['admin', 'super_admin']), updateApp);
 router.post("/createApp", authenticateAndAuthorize(['admin', 'super_admin']), createApp);
 router.delete( "/delete/:id", authenticateAndAuthorize(['admin', 'super_admin']), deleteApp);
-router.get("/authtoken/:id", authenticateAndAuthorize(['admin', 'super_admin','user']), createauthtoken);
+router.get("/authtoken/:id/:app_name", authenticateAndAuthorize(['admin', 'super_admin','user']), createauthtoken);
 
 module.exports = router;

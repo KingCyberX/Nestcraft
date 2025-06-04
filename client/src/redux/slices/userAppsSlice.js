@@ -23,10 +23,10 @@ export const fetchTierApps = createAsyncThunk(
 
 export const createauthtoken = createAsyncThunk(
   'userApps/createauthtoken',
-  async (userId, { rejectWithValue }) => {
+  async ({userId, app_name}, { rejectWithValue }) => {
     try {
-
-      const response = await apiCore.get(`/userApps/authtoken/${userId}`);
+      const formattedAppName = app_name.replace(/\s+/g, '_');
+      const response = await apiCore.get(`/userApps/authtoken/${userId}/${formattedAppName}`);
       return response.data;  
     } catch (error) {
       return rejectWithValue(error.message);

@@ -67,7 +67,11 @@ const ThirdPartyApps = () => {
 
 const handleOpenApp = async (appId) => {
   try {
-    const resultAction = await dispatch(createauthtoken(user.id));
+    let a=userApps.find(app => app.appId === appId);
+    const resultAction = await dispatch(createauthtoken({
+      userId: user.id,
+      app_name: a.appName
+    }));
     if (createauthtoken.fulfilled.match(resultAction)) {
       const newAuthToken = resultAction.payload.authToken;
       const userApp = userApps.find(app => app.appId === appId);
